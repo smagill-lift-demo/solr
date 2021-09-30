@@ -22,7 +22,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.solr.common.MapSerializable;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.params.CoreAdminParams;
@@ -182,16 +181,24 @@ public class ConfigOverlay implements MapSerializable {
   }
 
 
-  public static Class<?> checkEditable(String path, boolean isXpath, List<String> hierarchy) {
-    List<String> parts = StrUtils.splitSmart(path, isXpath ? '/' : '.');
+
+  @SuppressWarnings({"rawtypes"})
+  public static Class checkEditable(String path, boolean isXpath, List<String> hierarchy) {
     return isEditable(isXpath, hierarchy, StrUtils.splitSmart(path, isXpath ? '/' : '.'));
   }
 
-  private static Class<?> isEditable(boolean isXpath, List<String> hierarchy, List<String> parts) {
+  @SuppressWarnings("rawtypes")
+  private static Class isEditable(boolean isXpath, List<String> hierarchy, List<String> parts) {
+
     Object obj = editable_prop_map;
     for (int i = 0; i < parts.size(); i++) {
       String part = parts.get(i);
-      boolean isAttr = isXpath && part.startsWith("@");
+      boolean isAttr = false;
+      try {
+        isAttr = isXpath && part.startsWith("@");
+      } catch (RuntimeException e) {
+        throw e;
+      }
       if (isAttr) {
         part = part.substring(1);
       }
@@ -250,6 +257,10 @@ public class ConfigOverlay implements MapSerializable {
     Map<String, Map<String, Object>> reqHandlers = (Map<String, Map<String, Object>>) data.get(typ);
     if (reqHandlers == null) return Collections.emptyMap();
     return Collections.unmodifiableMap(reqHandlers);
+  }
+
+  boolean hasKey(String key) {
+    return props.containsKey(key);
   }
 
 
